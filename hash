@@ -1,0 +1,5 @@
+Szudzik's hash function:
+
+A = a >= 0 ? 2 * a : -2 * a - 1;
+B = b >= 0 ? 2 * b : -2 * b - 1;
+A >= B ? A * A + A + B : A + B * B;
