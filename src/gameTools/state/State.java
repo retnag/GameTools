@@ -9,14 +9,12 @@ package gameTools.state;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Image;
 import java.awt.image.BufferedImage;
-import java.awt.image.ImageObserver;
+import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
-
 /**
  * <p>This Abstract Class represents a graphical state in a game. for example: menu state, game state, settings state...</p>
  * <p></p>
@@ -31,20 +29,37 @@ import javax.swing.SwingUtilities;
  */
 public abstract class State extends JPanel{
     private final State THIS = this;
+    private final Semaphore semaphore = new Semaphore(1);
     
     private volatile boolean running = false;
-    private long ticks = 0;
+    protected long ticks = 0;
     
     private BufferedImage screen;
     protected Graphics2D g;
     
     private Thread renderThread, updateThread;
+    public int maxFps = 100; //max fps
+    public int maxTps = 100; //max ticks per second
     private final Runnable updateRunnable = new Runnable() {
         @Override
         public void run() {
             while(running){
-                update(THIS);
+                try{
+                    semaphore.acquire();
+                    update(THIS);
+                } catch (InterruptedException ex) {
+                } finally {
+                  semaphore.release();
+                }
                 ticks++;
+                
+                tpsCounter.interrupt();
+                //handle max fps
+                if (tpsCounter.fps() > maxFps){
+                    try {
+                        Thread.sleep(1000/(maxTps-1));
+                    } catch (InterruptedException ex) {}
+                }
             }
         }
     };    
@@ -53,11 +68,27 @@ public abstract class State extends JPanel{
         public void run() {
             while(running){
 //                createNewGraphics();
-                fps++;   
-                render();
-                try {
-                    Thread.sleep(1000);
+
+                try{
+                    semaphore.acquire();
+                    render();
                 } catch (InterruptedException ex) {
+                } finally {
+                  semaphore.release();
+                }
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        paintImmediately(0, 0, width, height);
+                    }
+                });
+                fpsCounter.interrupt();
+                
+                //handle max fps
+                if (fpsCounter.fps() > maxFps){
+                    try {
+                        Thread.sleep(1000/(maxFps-1));
+                    } catch (InterruptedException ex) {}
                 }
             }
         }
@@ -65,13 +96,11 @@ public abstract class State extends JPanel{
     
     public InputManager inputManager = new InputManager(this);
     public SoundManager soundManager = new SoundManager();
+    public FPSCounter fpsCounter = new FPSCounter();
+    public FPSCounter tpsCounter = new FPSCounter();
     
     public String name;
-    private int width, height;
-    
-    public int fps;
-    private long time1, time2;
-    private boolean rendering;
+    protected int width, height;
     
     @Override
     public int getWidth() {
@@ -96,7 +125,7 @@ public abstract class State extends JPanel{
         renderThread = new Thread(renderRunnable);
         setDoubleBuffered(true);
         createNewGraphics();
-        time1=System.currentTimeMillis();
+        fpsCounter.start();
     }
     
     private void createNewGraphics(){
@@ -145,24 +174,17 @@ public abstract class State extends JPanel{
      * <br>
      * Dont forget to call super.render() in the end in order to actually do the rendering.
      */
-    public void render(){
-        repaint();
-    }
+    public abstract void render();
     
     @Override
-    public void paint(Graphics g) {
-        g.drawImage(screen, 0, 0, width, height, this);
-//        System.out.printf("ordered:\t%d%n",System.currentTimeMillis());
-//        System.out.printf("step:   \t%d%n",System.currentTimeMillis());
-//        g.dispose();
-//        g.drawImage(screen, 0, 0, width, height, this);
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-//                System.out.printf("done:    \t%d%n%n",System.currentTimeMillis());
-                renderThread.interrupt();
-            }
-        });
+    public void paintComponent(Graphics g) {
+        try{
+            semaphore.acquire();
+            g.drawImage(screen, 0, 0, width, height, this);
+        } catch (InterruptedException ex) {
+        } finally {
+          semaphore.release();
+        }
     }
       
 }

@@ -100,7 +100,7 @@ public class Map<T extends Tile>
     }
     
     public T fromPixel(int x, int y){
-        return getTile(tile.fromPixel(x, y, layout));
+            return getTile(tile.fromPixel(x, y, layout));
     }
     
     @Override
