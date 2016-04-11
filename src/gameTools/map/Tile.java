@@ -27,15 +27,23 @@ public abstract class Tile<T extends Tile>{
         this.y = y;
     }
     
+    @Override
+    public int hashCode(){
+        int A = (x >= 0) ? 2 * x : -2 * x - 1;
+        int B = (y >= 0) ? 2 * y : -2 * y - 1;
+        return (A >= B) ? A * A + A + B : B * B + A;
+    }
+    
     public abstract T newTile(int... i);
     
-    /**
-     *
-     * @param b
-     * @return
-     */
-    public boolean equals(TileHex b) {
-        return (x==b.x && y==b.y);
+    @Override
+    public boolean equals(Object o) {
+        if (o != null && o instanceof Tile){
+            Tile t = (Tile) o;
+            return (x==t.x && y==t.y);
+        } else {
+            return false;
+        }
     }
     
     /**
