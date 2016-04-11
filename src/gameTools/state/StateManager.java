@@ -34,10 +34,10 @@ public class StateManager {
     }
     
     public void startCurrentState(){
+        System.out.println("starting state: "+states.get(currentState).name);
         try{
             gameFrame.add(states.get(currentState));
             gameFrame.pack();
-            gameFrame.setLocationRelativeTo(null);
             states.get(currentState).start();
             states.get(currentState).requestFocus();
         } catch(IndexOutOfBoundsException e){
@@ -47,11 +47,13 @@ public class StateManager {
     }
     
     public void stopCurrentState(){
-        gameFrame.remove(states.get(currentState));
+        System.out.println("stopping state: "+states.get(currentState).name);
         states.get(currentState).stop();
+        gameFrame.remove(states.get(currentState));
     }
     
     public void setCurrentState(String s){
+        System.out.println("setting state to: "+s);
         for(int i = 0; i < states.size(); i++){
             if(s.equals(states.get(i).name)){
                 currentState = i;

@@ -18,7 +18,7 @@ public class FPSCounter extends Thread{
         while (true){
             lastTime = System.nanoTime();
             try{
-                Thread.sleep(1000); // longer than one frame
+                Thread.sleep(2000); // longer than one frame
             }
             catch (InterruptedException e){
 

@@ -39,11 +39,11 @@ public abstract class State extends JPanel{
     
     private Thread renderThread, updateThread;
     public int maxFps = 100; //max fps
-    public int maxTps = 100; //max ticks per second
+    public int Tps = 100; //max ticks per second
     private final Runnable updateRunnable = new Runnable() {
         @Override
         public void run() {
-            while(running){
+            do{
                 try{
                     semaphore.acquire();
                     update(THIS);
@@ -53,20 +53,17 @@ public abstract class State extends JPanel{
                 }
                 ticks++;
                 
-                tpsCounter.interrupt();
-                //handle max fps
-                if (tpsCounter.fps() > maxFps){
-                    try {
-                        Thread.sleep(1000/(maxTps-1));
-                    } catch (InterruptedException ex) {}
-                }
-            }
+                //handle Tps
+                try {
+                    Thread.sleep(1000/Tps);
+                } catch (InterruptedException ex) {}
+            }while(running);
         }
     };    
     private final Runnable renderRunnable = new Runnable() {
         @Override
         public void run() {
-            while(running){
+            do{
 //                createNewGraphics();
 
                 try{
@@ -87,10 +84,10 @@ public abstract class State extends JPanel{
                 //handle max fps
                 if (fpsCounter.fps() > maxFps){
                     try {
-                        Thread.sleep(1000/(maxFps-1));
+                        Thread.sleep(1000/(maxFps));
                     } catch (InterruptedException ex) {}
                 }
-            }
+            }while(running);
         }
     };
     
@@ -121,8 +118,7 @@ public abstract class State extends JPanel{
         this.width = width;
         this.height = height;
         this.setPreferredSize(new Dimension(width, height));
-        updateThread = new Thread(updateRunnable);
-        renderThread = new Thread(renderRunnable);
+        running=false;
         setDoubleBuffered(true);
         createNewGraphics();
         fpsCounter.start();
@@ -134,17 +130,19 @@ public abstract class State extends JPanel{
     }
     
     public void start(){
+        
         if(!running){
             running = true;
+            updateThread = new Thread(updateRunnable);
+            renderThread = new Thread(renderRunnable);
             updateThread.start();
             renderThread.start();
         }
+//        repaint();
     }
     
     public void stop(){
-        if(running){
-            running = false;
-        }
+        running = false;
         soundManager.stopAllSounds();
     }
     
