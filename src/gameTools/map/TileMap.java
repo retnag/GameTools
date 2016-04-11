@@ -21,14 +21,14 @@ import java.util.Iterator;
  * @author ganter
  * @param <T>
  */
-public class Map<T extends Tile>
+public class TileMap<T extends Tile>
         extends HashMap<ArrayList<Integer>, T>
         implements gameTools.Graphical{
     
     public Layout layout;
     protected T tile;
     
-    public Map(MapGenerator<T> g, Layout l){
+    public TileMap(MapGenerator<T> g, Layout l){
         super();
         ArrayList<T> tiles = g.generate();
         int i;
