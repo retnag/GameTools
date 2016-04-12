@@ -42,7 +42,7 @@ public class StateManager {
             states.get(currentState).requestFocus();
         } catch(IndexOutOfBoundsException e){
             System.err.println("[ERROR] IndexOutOfBoundsException - propably because there are no states registered!");
-            System.err.println(e.getMessage());
+            e.printStackTrace();
         }
     }
     
